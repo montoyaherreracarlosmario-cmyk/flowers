@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Para ti - Sorpresa de Flores Amarillas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:ital,wght@0,400;0,600;1,600;1,700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#fff6e0;
+    --yellow:#f9d45e;
+    --yellow-soft:#fbe8a6;
+    --orange:#e8873a;
+    --orange-deep:#c25a1f;
+    --brown:#5a4326;
+    --green:#7c9a6b;
+    --green-dark:#4d6d3d;
+    --paper:#f3e3c3;
+    --paper-shadow:#d3bd91;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;min-height:100%;}
+  body{
+    background:linear-gradient(160deg,var(--yellow-soft),var(--cream) 60%);
+    font-family:'Nunito',sans-serif;
+    color:var(--brown);
+    overflow-x:hidden;
+  }
+  .screen{
+    min-height:100vh;
+    width:100%;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    padding:6vh 4vw;
+    text-align:center;
+    position:relative;
+  }
+  .screen.active{display:flex;}
+  h1,h2,h3{font-family:'Baloo 2',cursive;font-weight:700;color:var(--orange-deep);margin:0 0 .3em;}
+  
+  .frame{
+    border:3px solid var(--orange);
+    border-radius:32px;
+    padding:4vh 4vw;
+    max-width:620px;
+    width:100%;
+    background:rgba(255,255,255,.45);
+    backdrop-filter:blur(3px);
+    position:relative;
+    box-shadow:0 12px 30px rgba(194,90,31,0.08);
+  }
+  .daisy{position:absolute;width:46px;height:46px;opacity:.85;font-size:1.8rem;user-select:none;}
+  .d1{top:-20px;left:-20px;}
+  .d2{bottom:-20px;right:-20px;transform:rotate(30deg);}
+
+  /* Snoopy simple SVG */
+  .snoopy{width:110px;margin:0 auto 1em;display:block;}
+
+  h1{font-size:2.1rem;}
+  p.lead{font-size:1.05rem;max-width:40ch;margin:0 auto 1.5em;line-height:1.5;}
+
+  .btn-row{display:flex;gap:1em;justify-content:center;flex-wrap:wrap;}
+  button{
+    font-family:'Baloo 2',cursive;
+    font-size:1.05rem;
+    padding:.75em 1.8em;
+    border-radius:999px;
+    border:2px solid var(--orange-deep);
+    background:var(--yellow);
+    color:var(--orange-deep);
+    cursor:pointer;
+    font-weight:700;
+    transition:transform .15s ease, background .2s ease, box-shadow .2s ease;
+    box-shadow:0 4px 12px rgba(194,90,31,0.15);
+  }
+  button:hover{transform:translateY(-2px) scale(1.03);background:var(--orange);color:#fff;}
+  button:focus-visible{outline:3px solid var(--green);outline-offset:2px;}
+  #btnNo{background:transparent;box-shadow:none;}
+
+  #liarMsg{display:none;margin-top:1.2em;font-style:italic;color:var(--orange-deep);font-weight:600;}
+  #liarMsg.show{display:block;animation:pop .4s ease;}
+  @keyframes pop{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+
+  /* Cards grid */
+  .cards{display:grid;grid-template-columns:repeat(2,1fr);gap:1.1em;max-width:520px;margin:0 auto;}
+  .card{
+    perspective:1000px;height:160px;cursor:pointer;
+  }
+  .card-inner{
+    position:relative;width:100%;height:100%;
+    transform-style:preserve-3d;transition:transform .6s cubic-bezier(.4,.2,.2,1);
+  }
+  .card.flipped .card-inner{transform:rotateY(180deg);}
+  .card-face{
+    position:absolute;inset:0;
+    border-radius:18px;border:2px solid var(--orange);
+    display:flex;align-items:center;justify-content:center;
+    backface-visibility:hidden;padding:.8em;
+  }
+  .card-front{background:var(--yellow);box-shadow:0 6px 14px rgba(0,0,0,0.05);}
+  .card-back{
+    background:var(--cream);transform:rotateY(180deg);
+    font-size:.82rem;line-height:1.35;color:var(--brown);
+    font-style:italic;
+  }
+  .card-front svg{width:56px;}
+
+  #toNext{margin-top:1.8em;}
+
+  /* Bouquet layout */
+  .bouquet-wrap{
+    position:relative;
+    width:min(90vw, 380px);
+    height:500px;
+    margin:0 auto;
+  }
+  .wrapper-svg{
+    position:absolute;
+    inset:0;
+    z-index:1;
+    pointer-events:none;
+  }
+  .flower{
+    position:absolute;
+    cursor:pointer;
+    transition:transform .25s ease, filter .25s ease;
+    filter:drop-shadow(0 4px 6px rgba(100,60,0,.3));
+    z-index:2;
+  }
+  .flower:hover, .flower.shown{
+    transform:translateY(-6px) scale(1.12);
+    filter:drop-shadow(0 8px 12px rgba(100,60,0,.4));
+    z-index:4;
+  }
+  .word-pop{
+    position:absolute;
+    font-family:'Baloo 2',cursive;
+    background:#fff;
+    border:2px solid var(--orange-deep);
+    border-radius:14px;
+    padding:.35em .8em;
+    font-size:.78rem;
+    color:var(--orange-deep);
+    white-space:nowrap;
+    opacity:0;pointer-events:none;
+    transform:translate(-50%,6px);
+    transition:opacity .25s ease, transform .25s ease;
+    z-index:10;
+    box-shadow:0 4px 10px rgba(0,0,0,0.12);
+  }
+  .word-pop.show{opacity:1;transform:translate(-50%,-6px);}
+
+  /* Meanings Section */
+  .meanings-box{
+    margin-top:2em;
+    text-align:left;
+    background:rgba(255,255,255,.7);
+    border-radius:20px;
+    padding:1.4em;
+    border:2px solid var(--orange-deep);
+  }
+  .meanings-box h3{
+    text-align:center;
+    font-size:1.3rem;
+    margin-bottom:.8em;
+  }
+  .meaning-item{
+    margin-bottom:.9em;
+    font-size:.88rem;
+    line-height:1.4;
+  }
+  .meaning-item:last-child{margin-bottom:0;}
+  .meaning-title{
+    font-weight:700;
+    color:var(--orange-deep);
+    display:flex;
+    align-items:center;
+    gap:.4em;
+  }
+
+  footer.note{margin-top:1.8em;font-size:.88rem;color:var(--orange-deep);opacity:.9;font-weight:600;}
+</style>
+</head>
+<body>
+
+<!-- SCREEN 1: PORTADA -->
+<section class="screen active" id="s1">
+  <div class="frame">
+    <div class="daisy d1">🌼</div><div class="daisy d2">🌼</div>
+    <svg class="snoopy" viewBox="0 0 100 140">
+      <ellipse cx="35" cy="128" rx="9" ry="10" fill="#fff" stroke="#222" stroke-width="3"/>
+      <ellipse cx="65" cy="128" rx="9" ry="10" fill="#fff" stroke="#222" stroke-width="3"/>
+      <ellipse cx="50" cy="106" rx="28" ry="26" fill="#fff" stroke="#222" stroke-width="3"/>
+      <path d="M27,44 Q6,58 14,86 Q22,96 33,84 Q29,62 33,46 Z" fill="#fff" stroke="#222" stroke-width="3"/>
+      <path d="M73,44 Q94,58 86,86 Q78,96 67,84 Q71,62 67,46 Z" fill="#fff" stroke="#222" stroke-width="3"/>
+      <circle cx="50" cy="48" r="26" fill="#fff" stroke="#222" stroke-width="3"/>
+      <path d="M26,40 Q34,27 47,31 Q41,44 30,49 Z" fill="#3a3a3a"/>
+      <ellipse cx="50" cy="59" rx="14" ry="10" fill="#fff" stroke="#222" stroke-width="3"/>
+      <ellipse cx="50" cy="54" rx="6" ry="4.5" fill="#222"/>
+      <path d="M35,40 Q40,36 45,40" fill="none" stroke="#222" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M56,40 Q61,36 66,40" fill="none" stroke="#222" stroke-width="2.6" stroke-linecap="round"/>
+      <rect x="34" y="92" width="32" height="26" rx="2" fill="#f7d34d" stroke="#c25a1f" stroke-width="2.5"/>
+      <rect x="46" y="92" width="8" height="26" fill="#e8873a"/>
+      <rect x="34" y="101" width="32" height="8" fill="#e8873a"/>
+      <path d="M50,92 Q41,80 46,76 Q50,82 50,92 Q50,82 54,76 Q59,80 50,92 Z" fill="#e8873a" stroke="#c25a1f" stroke-width="2"/>
+      <path d="M24,94 Q17,106 30,118 Q40,122 40,112" fill="none" stroke="#222" stroke-width="3" stroke-linecap="round"/>
+      <path d="M76,94 Q83,106 70,118 Q60,122 60,112" fill="none" stroke="#222" stroke-width="3" stroke-linecap="round"/>
+      <ellipse cx="31" cy="117" rx="7" ry="6" fill="#fff" stroke="#222" stroke-width="2.5"/>
+      <ellipse cx="69" cy="117" rx="7" ry="6" fill="#fff" stroke="#222" stroke-width="2.5"/>
+    </svg>
+    <h1>Para la niña que lo merece todo</h1>
+    <p class="lead" style="margin-top:-1em;font-weight:700;">¿Quieres ver tu sorpresa?</p>
+    <div class="btn-row">
+      <button id="btnSi">Sí por favor</button>
+      <button id="btnNo">No gracias</button>
+    </div>
+    <p id="liarMsg">jajaja no seas mentirosa, sé que sí quieres 🌼 dale, inténtalo de nuevo.</p>
+  </div>
+</section>
+
+<!-- SCREEN 2: TARJETAS -->
+<section class="screen" id="s2">
+  <div class="frame">
+    <div class="daisy d1">🌼</div><div class="daisy d2">🌼</div>
+    <h2>¡Sorpresaaa mi amor!</h2>
+    <p class="lead" style="margin-top:-.6em;">Toca cada perrito, cada uno esconde una palabra bonita para ti.</p>
+    <div class="cards" id="cards"></div>
+    <div id="toNext" style="display:none;">
+      <button id="btnBouquet">Ver tu ramo especial 💐</button>
+    </div>
+  </div>
+</section>
+
+<!-- SCREEN 3: RAMO ABUNDANTE Y SIGNIFICADOS -->
+<section class="screen" id="s3">
+  <div class="frame" style="max-width:580px;">
+    <div class="daisy d1">🌼</div><div class="daisy d2">🌼</div>
+    <h2>Un ramo muy especial para ti</h2>
+    <p class="lead" style="margin-top:-.6em;">
+      Cada flor de este ramo la elegí pensando en ti, mi niña. Tócalas una por una y descubre lo que cada una significa.
+    </p>
+    
+    <div class="bouquet-wrap" id="bouquet"></div>
+
+    <!-- Significado de cada flor -->
+    <div class="meanings-box">
+      <h3>✨ El Significado de tus Flores ✨</h3>
+      
+      <div class="meaning-item">
+        <div class="meaning-title">🌹 Rosas Amarillas</div>
+        El amor cálido, el gozo y la alegría pura que siento cada vez que estoy a tu lado.
+      </div>
+      
+      <div class="meaning-item">
+        <div class="meaning-title">🌸 Lirios Amarillos</div>
+        La gratitud y la nobleza de tu corazón. Significan lo especial y única que eres para mí.
+      </div>
+      
+      <div class="meaning-item">
+        <div class="meaning-title">🌺 Alstroemerias</div>
+        La devoción, la amistad sincera y la complicidad que nos une cada día más.
+      </div>
+      
+      <div class="meaning-item">
+        <div class="meaning-title">🌼 Crisantemos</div>
+        La felicidad compartida y los deseos de una larga vida llena de sonrisas juntos.
+      </div>
+      
+      <div class="meaning-item">
+        <div class="meaning-title">🌷 Tulipanes Amarillos</div>
+        La alegría en el pensamiento y la luz radiante que le traes a mis días.
+      </div>
+
+      <div class="meaning-item">
+        <div class="meaning-title">🌾 Solidago (Vara de Oro)</div>
+        El estímulo, la buena suerte y la promesa de estar siempre apoyándote.
+      </div>
+    </div>
+
+    <footer class="note">Hecho con todo mi corazón para ti 💛🌻</footer>
+  </div>
+</section>
+
+<script>
+// ---- Navigation & UI logic ----
+const s1=document.getElementById('s1'), s2=document.getElementById('s2'), s3=document.getElementById('s3');
+document.getElementById('btnNo').addEventListener('click',()=>{
+  document.getElementById('liarMsg').classList.add('show');
+});
+document.getElementById('btnSi').addEventListener('click',()=>{
+  s1.classList.remove('active'); s2.classList.add('active');
+});
+
+// ---- Screen 2: Cards logic ----
+const verses=[
+  {ref:'Jeremías 29:11', text:'“Porque yo sé los planes que tengo para ti, planes de bienestar y no de calamidad, para darte un futuro y una esperanza.”'},
+  {ref:'Sofonías 3:17', text:'“El Señor tu Dios está en medio de ti, poderoso, Él te salvará; se gozará sobre ti con alegría, te renovará con su amor.”'},
+  {ref:'Salmos 37:4', text:'“Deléitate en el Señor, y Él te concederá las peticiones de tu corazón.”'},
+  {ref:'Isaías 41:10', text:'“No temas, porque yo estoy contigo; no desmayes, porque yo soy tu Dios que te esfuerzo, te ayudo y te sustento.”'}
+];
+const snoopySVG=`<svg viewBox="0 0 100 140">
+  <ellipse cx="35" cy="128" rx="9" ry="10" fill="#fff" stroke="#222" stroke-width="3.2"/>
+  <ellipse cx="65" cy="128" rx="9" ry="10" fill="#fff" stroke="#222" stroke-width="3.2"/>
+  <ellipse cx="50" cy="106" rx="28" ry="26" fill="#fff" stroke="#222" stroke-width="3.2"/>
+  <path d="M27,44 Q6,58 14,86 Q22,96 33,84 Q29,62 33,46 Z" fill="#fff" stroke="#222" stroke-width="3.2"/>
+  <path d="M73,44 Q94,58 86,86 Q78,96 67,84 Q71,62 67,46 Z" fill="#fff" stroke="#222" stroke-width="3.2"/>
+  <circle cx="50" cy="48" r="26" fill="#fff" stroke="#222" stroke-width="3.2"/>
+  <path d="M26,40 Q34,27 47,31 Q41,44 30,49 Z" fill="#3a3a3a"/>
+  <ellipse cx="50" cy="59" rx="14" ry="10" fill="#fff" stroke="#222" stroke-width="3.2"/>
+  <ellipse cx="50" cy="54" rx="6" ry="4.5" fill="#222"/>
+  <path d="M35,40 Q40,36 45,40" fill="none" stroke="#222" stroke-width="2.8" stroke-linecap="round"/>
+  <path d="M56,40 Q61,36 66,40" fill="none" stroke="#222" stroke-width="2.8" stroke-linecap="round"/>
+  <rect x="34" y="92" width="32" height="26" rx="2" fill="#f7d34d" stroke="#c25a1f" stroke-width="2.6"/>
+  <rect x="46" y="92" width="8" height="26" fill="#e8873a"/>
+  <rect x="34" y="101" width="32" height="8" fill="#e8873a"/>
+  <path d="M50,92 Q41,80 46,76 Q50,82 50,92 Q50,82 54,76 Q59,80 50,92 Z" fill="#e8873a" stroke="#c25a1f" stroke-width="2"/>
+  <path d="M24,94 Q17,106 30,118 Q40,122 40,112" fill="none" stroke="#222" stroke-width="3.2" stroke-linecap="round"/>
+  <path d="M76,94 Q83,106 70,118 Q60,122 60,112" fill="none" stroke="#222" stroke-width="3.2" stroke-linecap="round"/>
+  <ellipse cx="31" cy="117" rx="7" ry="6" fill="#fff" stroke="#222" stroke-width="2.6"/>
+  <ellipse cx="69" cy="117" rx="7" ry="6" fill="#fff" stroke="#222" stroke-width="2.6"/>
+</svg>`;
+const cardsEl=document.getElementById('cards');
+let flippedCount=0;
+verses.forEach((v)=>{
+  const card=document.createElement('div');
+  card.className='card';
+  card.innerHTML=`<div class="card-inner">
+    <div class="card-face card-front">${snoopySVG}</div>
+    <div class="card-face card-back"><span>${v.text}<br><b style="font-style:normal;color:var(--orange-deep)">— ${v.ref}</b></span></div>
+  </div>`;
+  card.addEventListener('click',()=>{
+    if(!card.classList.contains('flipped')){
+      card.classList.add('flipped');
+      flippedCount++;
+      if(flippedCount===verses.length){
+        document.getElementById('toNext').style.display='block';
+      }
+    }
+  });
+  cardsEl.appendChild(card);
+});
+document.getElementById('btnBouquet').addEventListener('click',()=>{
+  s2.classList.remove('active'); s3.classList.add('active');
+  buildBouquet();
+});
+
+// ---- Screen 3: Enhanced Dense Bouquet SVGs & Layout ----
+const CANVAS_W=380, CANVAS_H=500, BASE_X=190, BASE_Y=480;
+
+function svgWrap(defs, body, size=75){
+  return `<svg width="${size}" height="${size}" viewBox="0 0 80 80"><defs>${defs}</defs><g transform="translate(40,40)">${body}</g></svg>`;
+}
+function grad(id,c1,c2,c3){
+  return `<radialGradient id="${id}" cx="35%" cy="28%" r="78%"><stop offset="0%" stop-color="${c1}"/><stop offset="55%" stop-color="${c2}"/><stop offset="100%" stop-color="${c3}"/></radialGradient>`;
+}
+
+// Detailed Lily SVG with explicit long petals and stamens
+function lilySVG(){
+  let petals='', stamens='';
+  for(let i=0;i<6;i++){
+    petals+=`<ellipse cx="0" cy="-21" rx="7" ry="22" fill="url(#lg)" stroke="#b97a12" stroke-width="0.8" transform="rotate(${i*60})"/>`;
+  }
+  for(let i=0;i<6;i++){
+    const a=(i*60+30)*Math.PI/180, x=Math.sin(a)*16, y=-Math.cos(a)*16;
+    stamens+=`<line x1="0" y1="0" x2="${x}" y2="${y}" stroke="#985c08" stroke-width="1.2"/><ellipse cx="${x}" cy="${y}" rx="2.2" ry="1.2" fill="#703d00" transform="rotate(${i*60+30} ${x} ${y})"/>`;
+  }
+  return svgWrap(grad('lg','#fff8db','#f9d233','#ce890f'), petals+stamens+`<circle r="4" fill="#bd6d0d"/>`, 94);
+}
+
+// Layered Rose SVG
+function roseSVG(){
+  let petals='';
+  [[18,5,0],[13,5,34],[7.5,5,68],[4,3,15]].forEach(([r,n,rot])=>{
+    for(let i=0;i<n;i++){
+      const a=i*(360/n)+rot;
+      petals+=`<path d="M0,0 Q${r*.55},${-r*.85} 0,${-r} Q${-r*.55},${-r*.85} 0,0 Z" fill="url(#rg)" stroke="#b97a12" stroke-width=".5" transform="rotate(${a})"/>`;
+    }
+  });
+  return svgWrap(grad('rg','#fff3b0','#f5c62f','#c9860a'), petals+`<circle r="3" fill="#c9780e"/>`, 90);
+}
+
+// Alstroemeria SVG with characteristic freckles
+function alstroSVG(){
+  let petals='';
+  for(let i=0;i<6;i++){
+    const a=i*60, freckles=i%2===0?`<circle cx="-1.5" cy="-13" r=".9" fill="#8c4b00"/><circle cx="1.5" cy="-16" r=".9" fill="#8c4b00"/><circle cx="0" cy="-10" r=".8" fill="#8c4b00"/>`:'';
+    petals+=`<g transform="rotate(${a})"><ellipse cx="0" cy="-18" rx="5.5" ry="18" fill="url(#ag)" stroke="#b97a12" stroke-width=".8"/>${freckles}</g>`;
+  }
+  return svgWrap(grad('ag','#fff8db','#f6cf3d','#c9860a'), petals+`<circle r="3.5" fill="#c9781c"/>`, 88);
+}
+
+// Chrysanthemum SVG with dense petals
+function chrysanSVG(){
+  let petals='';
+  for(let i=0;i<18;i++) petals+=`<ellipse cx="0" cy="-15" rx="1.9" ry="15" fill="url(#cg)" transform="rotate(${i*20})"/>`;
+  for(let i=0;i<12;i++) petals+=`<ellipse cx="0" cy="-9" rx="1.5" ry="9" fill="url(#cg)" opacity=".9" transform="rotate(${i*30+10})"/>`;
+  return svgWrap(grad('cg','#fff8d1','#f4cd38','#c9860a'), petals+`<circle r="3" fill="#c9780e"/>`, 88);
+}
+
+// Tulip SVG
+function tulipSVG(){
+  let petals='';
+  for(let i=0;i<6;i++){
+    petals+=`<path d="M0,-1 C-8,-8 -7,-22 0,-25 C7,-22 8,-8 0,-1 Z" fill="url(#tg)" stroke="#b97a12" stroke-width=".8" transform="rotate(${i*60})"/>`;
+  }
+  return svgWrap(grad('tg','#fff8db','#f6cf3d','#c48a12'), petals, 86);
+}
+
+// Solidago SVG (goldenrod filler)
+function solidagoSVG(){
+  let dots='';
+  for(let i=0;i<18;i++){
+    const t=i/18, y=-4-t*30, x=Math.sin(i*2.2)*(5+t*6);
+    dots+=`<circle cx="${x}" cy="${y}" r="${2.4-t*.8}" fill="url(#sg)" stroke="#b98f14" stroke-width=".3"/>`;
+  }
+  return svgWrap(grad('sg','#fff8d1','#f2cf3a','#c99a1a'), dots, 78);
+}
+
+const flowerSVG={lily:lilySVG,rose:roseSVG,alstro:alstroSVG,chrysan:chrysanSVG,tulip:tulipSVG,solidago:solidagoSVG};
+
+const bouquetWords=[
+  'Te amo tanto', 'Mi persona favorita', 'Eres mi paz', 'Gracias por existir', 
+  'Mi lugar seguro', 'La razón de mi sonrisa', 'Contigo siempre', 'Mi niña bonita', 
+  'Mi hogar favorito', 'Eres mi luz', 'Mi mayor bendición', 'Nunca me faltes',
+  'Mi tesoro hermoso', 'Siempre para ti', 'Amor infinito', 'Mi complemento'
+];
+
+// 27 posiciones densas y encimadas para que el ramo se vea abundante, tipo domo
+const flowerLayout=[
+  // Fondo (arriba, forma de domo)
+  {x:190, y:62,  type:'lily'},
+  {x:150, y:75,  type:'rose'},
+  {x:230, y:75,  type:'tulip'},
+  {x:115, y:100, type:'solidago'},
+  {x:265, y:100, type:'solidago'},
+  {x:135, y:108, type:'chrysan'},
+  {x:245, y:108, type:'tulip'},
+  {x:95,  y:138, type:'chrysan'},
+  {x:285, y:138, type:'rose'},
+
+  // Medio-fondo
+  {x:190, y:105, type:'rose'},
+  {x:165, y:130, type:'alstro'},
+  {x:215, y:130, type:'solidago'},
+  {x:120, y:155, type:'alstro'},
+  {x:260, y:155, type:'lily'},
+  {x:95,  y:190, type:'tulip'},
+  {x:285, y:190, type:'chrysan'},
+
+  // Centro
+  {x:190, y:160, type:'lily'},
+  {x:150, y:180, type:'rose'},
+  {x:230, y:180, type:'alstro'},
+  {x:190, y:210, type:'chrysan'},
+  {x:115, y:225, type:'solidago'},
+  {x:265, y:225, type:'solidago'},
+
+  // Frente (abajo, más grande y encimado)
+  {x:160, y:225, type:'lily'},
+  {x:220, y:225, type:'chrysan'},
+  {x:190, y:250, type:'rose'},
+  {x:145, y:260, type:'tulip'},
+  {x:235, y:260, type:'tulip'}
+];
+
+function buildBouquet(){
+  const wrap=document.getElementById('bouquet');
+  if(wrap.dataset.built) return;
+  wrap.dataset.built='1';
+
+  // Paper Wrapper, Ribbon, Stems and Foliage
+  let stemsHTML=`<svg class="wrapper-svg" viewBox="0 0 ${CANVAS_W} ${CANVAS_H}">
+    <defs>
+      <linearGradient id="paperGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#fceabb"/>
+        <stop offset="100%" stop-color="#f8b500"/>
+      </linearGradient>
+      <linearGradient id="paperInner" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#fff5cc"/>
+        <stop offset="100%" stop-color="#edd285"/>
+      </linearGradient>
+    </defs>`;
+
+  // Green stems converging to lower base
+  flowerLayout.forEach(f=>{
+    const midX=(f.x+BASE_X)/2 + (f.x<BASE_X?-10:10);
+    stemsHTML+=`<path d="M${BASE_X},${BASE_Y-30} Q${midX},${(f.y+BASE_Y)/2} ${f.x},${f.y+20}" fill="none" stroke="#4d6d3d" stroke-width="4.5" stroke-linecap="round"/>`;
+    stemsHTML+=`<path d="M${BASE_X},${BASE_Y-30} Q${midX},${(f.y+BASE_Y)/2} ${f.x},${f.y+20}" fill="none" stroke="#7c9a6b" stroke-width="1.5" stroke-linecap="round"/>`;
+  });
+
+  // Paper Cone Wrap behind lower flowers
+  stemsHTML+=`
+    <!-- Paper Cone Outer -->
+    <path d="M80,240 Q190,320 300,240 L215,460 Q190,475 165,460 Z" fill="url(#paperGrad)" stroke="#c25a1f" stroke-width="2"/>
+    <!-- Paper Inner fold -->
+    <path d="M80,240 Q190,290 300,240 Q190,330 80,240 Z" fill="url(#paperInner)" opacity="0.9"/>
+    
+    <!-- Ribbon and Bow -->
+    <g transform="translate(${BASE_X}, ${BASE_Y-65})">
+      <path d="M-25,0 Q0,8 25,0 L20,16 Q0,22 -20,16 Z" fill="#e8873a" stroke="#c25a1f" stroke-width="1.5"/>
+      <path d="M0,8 L-32,28 Q-40,48 -22,45 L-5,12 Z" fill="#e8873a" stroke="#c25a1f" stroke-width="1.5"/>
+      <path d="M0,8 L32,28 Q40,48 22,45 L5,12 Z" fill="#e8873a" stroke="#c25a1f" stroke-width="1.5"/>
+      <ellipse cx="0" cy="8" rx="8" ry="7" fill="#c25a1f"/>
+    </g>
+  </svg>`;
+
+  wrap.insertAdjacentHTML('beforeend', stemsHTML);
+
+  // Render flowers over stems/wrap
+  flowerLayout.forEach((f,i)=>{
+    const fl=document.createElement('div');
+    fl.className='flower';
+    fl.style.left=(f.x-38)+'px'; 
+    fl.style.top=(f.y-38)+'px';
+    fl.innerHTML=flowerSVG[f.type]();
+
+    const pop=document.createElement('div');
+    pop.className='word-pop';
+    pop.style.left=f.x+'px'; 
+    pop.style.top=(f.y-42)+'px';
+    pop.textContent=bouquetWords[i%bouquetWords.length];
+
+    fl.addEventListener('click',()=>{
+      fl.classList.toggle('shown');
+      pop.classList.toggle('show');
+    });
+
+    wrap.appendChild(fl); 
+    wrap.appendChild(pop);
+  });
+}
+</script>
+</body>
+</html>
